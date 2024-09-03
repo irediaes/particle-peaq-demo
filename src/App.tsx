@@ -4,6 +4,8 @@ import { AAWrapProvider, SmartAccount } from '@particle-network/aa';
 import { useEthereum, useConnect, useAuthCore } from '@particle-network/auth-core-modal';
 import { ethers } from 'ethers';
 import { notification } from 'antd';
+import { Sdk } from '@peaq-network/sdk';
+import { mnemonicGenerate } from "@polkadot/util-crypto";
 
 import './App.css';
 import { didPrecompiledContractAddress } from './contracts/did';
@@ -51,6 +53,42 @@ const App = () => {
     }
   };
 
+  const generateMnemonicSeed = () => {
+    const mnemonicSeed = mnemonicGenerate();
+    return mnemonicSeed;
+  };
+
+  const generateDIDHash = async (didName) => {
+    const customFields = {
+      prefix: 'peaq',
+      controller: '5FEw7aWmqcnWDaMcwjKyGtJMjQfqYGxXmDWKVfcpnEPmUM7q',
+      verifications: [
+        {
+          type: 'ED25519VERIFICATIONKEY2020'
+        }
+      ],
+      signature: {
+        type: 'ED25519VERIFICATIONKEY2020',
+        issuer: '5Df42mkztLtkksgQuLy4YV6hmhzdjYvDknoxHv1QBkaY12Pg',
+        hash: '0x12345'
+      },
+      services: [
+        {
+          id: '#emailSignature',
+          type: 'emailSignature',
+          data: '0e816a00d228a6d215542334e51a01eb3280d202fe2324abe75bb8b4acaec4207cc00106e830d493603305f797706a0ef1952c44ea9f9b44c0b3ccc3d4bc758b'
+        },
+      ]
+    }
+
+    const seed = generateMnemonicSeed();
+
+    const sdk = await Sdk.createInstance({ baseUrl: "wss://krest.api.onfinality.io/public-ws" });
+
+    const did_hash = await sdk.did.generate({ seed: seed, name: didName, address: "5FEw7aWmqcnWDaMcwjKyGtJMjQfqYGxXmDWKVfcpnEPmUM7q", customDocumentFields: customFields });
+    return did_hash;
+  };
+
 
 
   const executeUserOp = async () => {
@@ -67,8 +105,12 @@ const App = () => {
     let now = new Date().getTime();
 
     const didAddress = address;
-    const name = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("didname" + now));
-    const value = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("didval"));
+    const didName = "didname" + now
+    const name = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(didName));
+    // const value = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("didval"));
+
+    const value = (await generateDIDHash(didName)).value;
+
     const validityFor = 0;
 
     const params = abiCoder.encode(
