@@ -53,22 +53,19 @@ const App = () => {
     }
   };
 
-  const generateMnemonicSeed = () => {
-    const mnemonicSeed = mnemonicGenerate();
-    return mnemonicSeed;
-  };
 
-  const generateDIDHash = async (didName) => {
+
+  const generateDIDHash = async () => {
     const customFields = {
       prefix: 'peaq',
       controller: '5FEw7aWmqcnWDaMcwjKyGtJMjQfqYGxXmDWKVfcpnEPmUM7q',
       verifications: [
         {
-          type: 'ED25519VERIFICATIONKEY2020'
+          type: 'Ed25519VerificationKey2020'
         }
       ],
       signature: {
-        type: 'ED25519VERIFICATIONKEY2020',
+        type: 'Ed25519VerificationKey2020',
         issuer: '5Df42mkztLtkksgQuLy4YV6hmhzdjYvDknoxHv1QBkaY12Pg',
         hash: '0x12345'
       },
@@ -81,11 +78,7 @@ const App = () => {
       ]
     }
 
-    const seed = generateMnemonicSeed();
-
-    const sdk = await Sdk.createInstance({ baseUrl: "wss://krest.api.onfinality.io/public-ws" });
-
-    const did_hash = await sdk.did.generate({ seed: seed, name: didName, address: "5FEw7aWmqcnWDaMcwjKyGtJMjQfqYGxXmDWKVfcpnEPmUM7q", customDocumentFields: customFields });
+    const did_hash = await Sdk.generateDidDocument({ address: "5FEw7aWmqcnWDaMcwjKyGtJMjQfqYGxXmDWKVfcpnEPmUM7q", customDocumentFields: customFields });
     return did_hash;
   };
 
@@ -109,7 +102,7 @@ const App = () => {
     const name = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(didName));
     // const value = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("didval"));
 
-    const value = (await generateDIDHash(didName)).value;
+    const value = (await generateDIDHash()).value;
 
     const validityFor = 0;
 
